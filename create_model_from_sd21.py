@@ -15,7 +15,7 @@ output = './output'
 #################
 # Load Booru Tags
 #################
-label_names = pd.read_csv("metadata/selected_tags.csv")
+label_names = pd.read_csv("metadata/tags.csv")
 #################
 # Load SD Models
 #################
@@ -33,6 +33,10 @@ unet = UNet2DConditionModel.from_pretrained(
     target_sd_model, subfolder="unet"
 )
 #################
+# Update VAE Config
+#################
+vae.config['sample_size'] = 768
+#################
 # Update Tokenizer
 #################
 print('updating tokenizer...')
@@ -43,6 +47,12 @@ for _, y in enumerate(label_names['name'][4:]):
     name = y.replace('_', ' ')
     if name not in vocab:
         tokenizer.add_tokens(name)
+with open('./metadata/tokens.txt') as f:
+    for _, line in enumerate(f.readlines()):
+        line = line.strip()
+        print(line)
+        if len(line) > 0 and line not in vocab:
+            tokenizer.add_tokens(line)
 print(tokenizer.get_added_vocab())
 print(f'resizing text_encoder embedding matrix (-> {len(tokenizer)})')
 text_encoder.resize_token_embeddings(len(tokenizer))
